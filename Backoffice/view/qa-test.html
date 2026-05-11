@@ -1,0 +1,167 @@
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VOLTEX — QA Test Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/Backoffice/view/qa-test.css" />
+</head>
+<body>
+
+<!-- ── CUSTOM CURSOR ─────────────────── -->
+<div class="cursor-outer" id="cursorOuter"></div>
+<div class="cursor-inner" id="cursorInner"></div>
+
+<!-- ── SCAN LINES OVERLAY ────────────── -->
+<div class="scanlines" aria-hidden="true"></div>
+
+<!-- ══════════════════════════════════════
+     HEADER
+══════════════════════════════════════ -->
+<header class="header">
+    <div class="header-left">
+        <div class="logo">
+            <span class="logo-bolt">⚡</span>
+            <span class="logo-name">VOLT<em>EX</em></span>
+            <span class="logo-divider"></span>
+            <span class="logo-sub">QA TEST SUITE</span>
+        </div>
+    </div>
+    <div class="header-right">
+        <div class="header-info" id="lastRunInfo">
+            <span class="info-label">LAST RUN</span>
+            <span class="info-value" id="lastRunTime">—</span>
+        </div>
+        <div class="header-info">
+            <span class="info-label">STATUS</span>
+            <span class="info-value" id="headerStatus">IDLE</span>
+        </div>
+        <div class="status-led" id="statusLed" data-state="idle"></div>
+    </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     MAIN
+══════════════════════════════════════ -->
+<main class="main">
+
+    <!-- ── CONFIG ─────────────────────── -->
+    <section class="config-section">
+        <div class="config-grid">
+
+            <div class="field-group">
+                <label class="field-label" for="baseUrl">
+                    <span class="field-label-icon">◈</span> BASE URL
+                </label>
+                <input
+                        type="text"
+                        id="baseUrl"
+                        class="field-input"
+                        placeholder="https://b2-gp96.kevinpecro.info"
+                        autocomplete="off"
+                        spellcheck="false"
+                />
+            </div>
+
+            <div class="field-group">
+                <label class="field-label" for="authToken">
+                    <span class="field-label-icon">◉</span> AUTH TOKEN
+                    <span class="field-label-note">Requis pour /commande/ et /paiement/</span>
+                </label>
+                <div class="token-field-wrap">
+                    <input
+                            type="password"
+                            id="authToken"
+                            class="field-input"
+                            placeholder="Token.. ex : VOLTEX2026"
+                            value="VOLTEX2026"
+                            autocomplete="off"
+                            spellcheck="false"
+                    />
+                    <button class="btn-icon-only" id="toggleToken" title="Afficher/masquer le token" aria-label="Toggle token visibility">
+                        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="field-group controls-group">
+                <div class="field-label field-label-spacer">&nbsp;</div>
+                <div class="controls-row">
+                    <button class="btn btn-primary" id="runAllBtn">
+                        <span class="btn-glow"></span>
+                        <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        <span class="btn-label">RUN ALL TESTS</span>
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn" title="Effacer les résultats sauvegardés">
+                        <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        <span class="btn-label">CLEAR</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CORS warning banner -->
+        <div class="cors-notice" id="corsNotice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Pour que les requêtes <em>cross-origin</em> fonctionnent, le serveur PHP doit renvoyer les headers CORS appropriés : <code>Access-Control-Allow-Origin</code> et <code>Access-Control-Allow-Methods</code>.</span>
+        </div>
+    </section>
+
+    <!-- ── PROGRESS ───────────────────── -->
+    <div class="progress-wrap" id="progressWrap">
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-meta">
+            <span class="progress-label" id="progressLabel">Initialisation…</span>
+            <span class="progress-count" id="progressCount">0 / 0</span>
+        </div>
+    </div>
+
+    <!-- ── STATS ──────────────────────── -->
+    <section class="stats-section" id="statsSection">
+        <div class="stat-card" id="statCardTotal">
+            <div class="stat-value" id="statTotal">—</div>
+            <div class="stat-key">TOTAL</div>
+        </div>
+        <div class="stat-card stat-pass" id="statCardPassed">
+            <div class="stat-value" id="statPassed">—</div>
+            <div class="stat-key">PASSED</div>
+        </div>
+        <div class="stat-card stat-fail" id="statCardFailed">
+            <div class="stat-value" id="statFailed">—</div>
+            <div class="stat-key">FAILED</div>
+        </div>
+        <div class="stat-card" id="statCardDuration">
+            <div class="stat-value" id="statDuration">—</div>
+            <div class="stat-key">DURATION (ms)</div>
+        </div>
+    </section>
+
+    <!-- ── RESULTS ────────────────────── -->
+    <section class="results-section" id="resultsSection">
+        <!-- Injected by script.js -->
+        <div class="results-empty" id="resultsEmpty">
+            <div class="empty-icon">◈</div>
+            <div class="empty-title">AUCUN TEST EXÉCUTÉ</div>
+            <div class="empty-sub">Configurez votre URL de base et votre token, puis cliquez sur <strong>RUN ALL TESTS</strong>.</div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ── FOOTER ─────────────────────── -->
+<footer class="footer">
+    <span>VOLTEX QA Suite v1.0</span>
+    <span class="footer-sep">·</span>
+    <span>PHP 8.3 · MySQL · Apache</span>
+    <span class="footer-sep">·</span>
+    <span id="footerTestCount">12 tests</span>
+    <span class="footer-sep">·</span>
+    <span>IUT 2025–2026</span>
+</footer>
+
+<script src="/Backoffice/view/qa-test.js"></script>
+</body>
+</html>

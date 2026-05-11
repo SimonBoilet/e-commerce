@@ -1,68 +1,50 @@
 <?php
-
 function APICommande() {
     global $pdo;
 
+    header('Content-Type: application/json; charset=utf-8');
+    header('Access-Control-Allow-Origin: *');
+
+    // 1. Sécurité
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
-        die('Method not allowed');
+        echo json_encode(["error" => "Method Not Allowed"]);
+        exit;
     }
 
-    if (!isset($_POST['token']) || $_POST['token'] !== 'WDIhUThWMz9aN0Y0VDFwOUE2') {
-        http_response_code(401);
-        die('Non autorisé');
-    }
+    verifierToken();
 
+    // 2. Logique
     if (isset($_POST['id']) && (int)$_POST['id'] > 0) {
-
         $idCommande = (int)$_POST['id'];
 
-        /* ── Infos commande ── */
         $stmtCommande = $pdo->prepare("SELECT * FROM commande WHERE id = ?");
         $stmtCommande->execute([$idCommande]);
-        $commande = $stmtCommande->fetch(PDO::FETCH_ASSOC);
+        $commande = $stmtCommande->fetch();
 
         if (!$commande) {
             http_response_code(404);
-            die(json_encode(['erreur' => 'Commande introuvable']));
+            echo json_encode(['error' => 'Commande introuvable']);
+            exit;
         }
 
-        /* ── Produits de la commande ── */
-        $stmtProduits = $pdo->prepare(
-            "SELECT cp.quantite,
-                    cp.prix_ht,
-                    cp.taux_tva,
-                    p.id          AS produit_id,
-                    p.nom,
-                    p.identifiant,
-                    p.image,
-                    p.description
-             FROM commande_produit cp
-             JOIN produit p ON p.id = cp.id_produit
-             WHERE cp.id_commande = ?"
-        );
+        $stmtProduits = $pdo->prepare("
+            SELECT cp.quantite, cp.prix_ht, cp.taux_tva, p.id AS produit_id, p.nom, p.image
+            FROM commande_produit cp
+            JOIN produit p ON p.id = cp.id_produit
+            WHERE cp.id_commande = ?
+        ");
         $stmtProduits->execute([$idCommande]);
-        $produits = $stmtProduits->fetchAll(PDO::FETCH_ASSOC);
+        $produits = $stmtProduits->fetchAll();
 
         foreach ($produits as &$p) {
-            $imgs       = array_values(array_filter(array_map('trim', explode(',', $p['image'] ?? ''))));
-            $p['image'] = $imgs[0] ?? null;
             $p['prix_ttc'] = round($p['prix_ht'] * (1 + $p['taux_tva'] / 100), 2);
         }
-        unset($p);
 
         $commande['produits'] = $produits;
-
         echo json_encode($commande);
-
     } else {
-
-        $lstCommande = $pdo->query(
-            "SELECT *
-             FROM commande
-             ORDER BY id DESC"
-        )->fetchAll(PDO::FETCH_ASSOC);
-
-        echo json_encode($lstCommande);
+        $lst = $pdo->query("SELECT * FROM commande ORDER BY id DESC")->fetchAll();
+        echo json_encode($lst);
     }
 }

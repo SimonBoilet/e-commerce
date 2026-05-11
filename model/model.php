@@ -1,6 +1,5 @@
 <?php
 
-session_start();
 
 date_default_timezone_set('Europe/Paris');
 
@@ -37,4 +36,16 @@ try {
     // Ne jamais afficher $e->getMessage() en production
     error_log($e->getMessage());
     throw new RuntimeException('Impossible de se connecter à la base de données.', (int)$e->getCode());
+}
+
+function verifierToken() {
+    $token_attendu = "VOLTEX2026";
+    $token_recu = $_POST['token'] ?? '';
+
+    if ($token_recu !== $token_attendu) {
+        header('Content-Type: application/json');
+        http_response_code(401);
+        echo json_encode(["error" => "Token invalide ou absent"]);
+        exit; // On arrête tout ici
+    }
 }

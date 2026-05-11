@@ -15,6 +15,7 @@ require_once 'controller/api/c-apiPaiement.php';
 require_once 'Backoffice/controller/c-bo-dashboard.php';
 require_once 'Backoffice/controller/c-bo-commande.php';
 require_once 'Backoffice/controller/c-bo-paiement.php';
+require_once 'Backoffice/controller/c-bo-test.php';
 
 /* ══ ROUTING API ══════════════════════════════════════════════════ */
 if (isset($_GET['pageAPI'])) {
@@ -64,6 +65,7 @@ if (isset($_GET['page']) && $_GET['page']) {
         case 'paiement': paiement(); break;
         case 'commande': commande(); break;
         case 'ipn':      ipn();      break;
+        case 'test':     BOTest();   break;
         default:         accueil();  break;
     }
 } else {
