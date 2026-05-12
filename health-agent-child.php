@@ -1462,7 +1462,7 @@ $allowed = ['ping', 'env', 'files_scan', 'php_syntax', 'db_discovery', 'structur
 if (!in_array($action, $allowed, true)) {
     ha_out([
         'success' => false,
-        'message' => 'Action non autorisée.',
+        'message' => 'Actsion non autorisée.',
         'allowed_actions' => $allowed,
     ], 400);
 }
